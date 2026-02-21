@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="বাউফলে ইফতারে কোথায় বিরিয়ানি বা খাবার দিচ্ছে, তা ম্যাপের মাধ্যমে সহজেই খুঁজে বের করুন।">
-    <meta name="keywords" content="Bauphal, Iftar, Biryani, Bauphal Biryani, Iftar Map Bauphal, Taohid Islam">
+    <meta name="keywords" content="Bauphal, Iftar, Biryani, Mosque, Bauphal Biryani, Iftar Map Bauphal">
     <meta name="author" content="Taohid Islam">
-    <meta property="og:title" content="বাউফল ইফতার ও বিরিয়ানি ফাইন্ডার">
-    <meta property="og:description" content="বাউফল উপজেলার কোথায় কী ইফতার দিচ্ছে, ম্যাপে দেখে নিন সহজেই।">
-    <meta property="og:url" content="https://bauphalbriyanidive.netlify.app">
-    <meta property="og:type" content="website">
     
     <title>বাউফল ইফতার ও বিরিয়ানি ফাইন্ডার 🌙</title>
 
@@ -20,106 +16,170 @@
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --primary: #059669;
-            --primary-light: #d1fae5;
-            --danger: #ef4444;
-            --danger-light: #fee2e2;
-            --text-dark: #1f2937;
-            --bg-color: #f3f4f6;
+            --primary: #047857; /* Deep Islamic Green */
+            --secondary: #d97706; /* Golden/Biryani Color */
+            --danger: #dc2626;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', sans-serif; }
         
-        body { background-color: var(--bg-color); color: var(--text-dark); overflow-x: hidden; }
+        body { background-color: var(--bg-color); color: var(--text-main); scroll-behavior: smooth; }
 
+        /* Modern Header */
         header {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            color: white; padding: 20px; text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            position: sticky; top: 0; z-index: 1000;
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+            color: white; padding: 25px 20px; text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative; border-bottom: 4px solid var(--secondary);
         }
         
-        header h1 { font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        header p { font-size: 14px; opacity: 0.9; }
+        header h1 { font-size: 28px; font-weight: 700; margin-bottom: 5px; text-shadow: 1px 2px 4px rgba(0,0,0,0.2); }
+        header p { font-size: 15px; opacity: 0.9; font-weight: 300; }
 
-        .filters {
-            display: flex; gap: 10px; justify-content: center; padding: 15px;
-            background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            flex-wrap: wrap;
+        /* Sticky Filters */
+        .filters-wrapper {
+            position: sticky; top: 0; z-index: 999;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
+        .filters { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; max-width: 900px; margin: 0 auto; }
+
         .filter-btn {
-            padding: 8px 16px; border: 2px solid var(--primary); background: transparent;
-            color: var(--primary); border-radius: 20px; cursor: pointer;
-            font-weight: 600; transition: all 0.3s ease;
+            padding: 8px 20px; border: 2px solid var(--primary); background: transparent;
+            color: var(--primary); border-radius: 30px; cursor: pointer;
+            font-weight: 600; font-size: 15px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .filter-btn.active, .filter-btn:hover {
             background: var(--primary); color: white; transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+            box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);
         }
 
-        #map { height: 50vh; width: 100%; z-index: 1; border-bottom: 4px solid var(--primary); }
+        /* Map Styling */
+        .map-container {
+            position: relative; max-width: 1200px; margin: 20px auto; padding: 0 15px;
+        }
 
-        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
-        .section-title { font-size: 20px; font-weight: 700; margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 5px; }
+        #map { 
+            height: 55vh; width: 100%; border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 2px solid #e2e8f0; z-index: 1;
+        }
 
-        .spot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .reset-map-btn {
+            position: absolute; bottom: 20px; left: 30px; z-index: 1000;
+            background: white; border: none; padding: 10px 15px;
+            border-radius: 8px; font-weight: 600; color: var(--primary);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;
+            display: flex; align-items: center; gap: 5px; transition: 0.2s;
+        }
+        .reset-map-btn:hover { background: var(--primary); color: white; }
 
+        /* List Section */
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 15px; }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;
+        }
+        .section-title { font-size: 22px; font-weight: 700; color: var(--primary); }
+        .instruction { font-size: 14px; color: var(--text-muted); background: #e2e8f0; padding: 4px 10px; border-radius: 20px; }
+
+        .spot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+
+        /* Premium Card Styling */
         .spot-card {
-            background: white; border-radius: 12px; padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.3s ease;
-            animation: fadeIn 0.5s ease-out forwards;
-            border-left: 5px solid gray;
+            background: var(--card-bg); border-radius: 16px; padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #f1f5f9;
+            transition: all 0.3s ease; cursor: pointer; position: relative;
+            overflow: hidden;
         }
         
-        .spot-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        .spot-card.giving { border-left-color: var(--primary); }
-        .spot-card.not-giving { border-left-color: var(--danger); opacity: 0.8; }
+        .spot-card:hover { 
+            transform: translateY(-5px) scale(1.02); 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08); 
+            border-color: var(--primary);
+        }
 
-        .spot-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .spot-title { font-size: 18px; font-weight: 700; }
+        .spot-card::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 6px;
+        }
+        .spot-card.giving::before { background: var(--primary); }
+        .spot-card.not-giving::before { background: var(--danger); }
+        .spot-card.not-giving { opacity: 0.7; }
+
+        .spot-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .spot-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         
-        .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-        .badge.biryani { background: #fef3c7; color: #d97706; }
-        .badge.other { background: #e0e7ff; color: #4338ca; }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge.biryani { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .badge.other { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
         
-        .status { margin-top: 10px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
-        .status.yes { color: var(--primary); }
-        .status.no { color: var(--danger); }
+        .spot-address { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 5px;}
+        
+        .status { padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; text-align: center; }
+        .status.yes { background: #d1fae5; color: #065f46; }
+        .status.no { background: #fee2e2; color: #991b1b; }
 
-        footer { text-align: center; padding: 20px; margin-top: 30px; background: white; color: #6b7280; font-size: 14px; }
-        footer span { font-weight: 700; color: var(--primary); }
+        /* Map Marker CSS & Popup */
+        .custom-marker {
+            background: white; border-radius: 50%; border: 3px solid;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 18px; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: 0.3s;
+        }
+        .custom-marker.giving { border-color: var(--primary); }
+        .custom-marker.not-giving { border-color: var(--danger); opacity: 0.7; }
+        
+        .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
+        .leaflet-popup-content { margin: 0; }
+        .popup-img { width: 100%; height: 120px; object-fit: cover; }
+        .popup-info { padding: 15px; }
+        .popup-info h3 { margin: 0 0 5px 0; font-size: 16px; color: var(--primary); }
+        .popup-info p { margin: 0; font-size: 14px; color: #475569; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Custom Map Marker Popup */
-        .leaflet-popup-content-wrapper { border-radius: 8px; }
-        .leaflet-popup-content { font-family: 'Hind Siliguri', sans-serif; font-size: 14px; margin: 10px; }
+        footer { text-align: center; padding: 25px; margin-top: 40px; background: #1e293b; color: #94a3b8; font-size: 14px; }
+        footer span { font-weight: 700; color: #34d399; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🍲 বাউফল ইফতার ফাইন্ডার</h1>
-        <p>বাউফল উপজেলায় কোথায় বিরিয়ানি বা ইফতার দিচ্ছে সহজে খুঁজে নিন</p>
+        <h1>🌙 বাউফল ইফতার ফাইন্ডার</h1>
+        <p>সহজেই খুঁজে নিন আপনার আশেপাশের ইফতার ও বিরিয়ানি বিতরণের স্থান</p>
     </header>
 
-    <div class="filters">
-        <button class="filter-btn active" data-filter="all">সব দেখুন 🌍</button>
-        <button class="filter-btn" data-filter="biryani">বিরিয়ানি 🍛</button>
-        <button class="filter-btn" data-filter="other">অন্যান্য 🧃</button>
+    <div class="filters-wrapper">
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all"><i class="fas fa-globe"></i> সব দেখুন</button>
+            <button class="filter-btn" data-filter="biryani"><i class="fas fa-utensils"></i> বিরিয়ানি</button>
+            <button class="filter-btn" data-filter="other"><i class="fas fa-box-open"></i> অন্যান্য</button>
+        </div>
     </div>
 
-    <div id="map"></div>
+    <div class="map-container" id="map-section">
+        <div id="map"></div>
+        <button class="reset-map-btn" onclick="resetMap()"><i class="fas fa-expand"></i> পুরো বাউফল দেখুন</button>
+    </div>
 
     <div class="container">
-        <h2 class="section-title">📍 আজকের তালিকা</h2>
+        <div class="section-header">
+            <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> আজকের তালিকা</h2>
+            <span class="instruction">কার্ডে ক্লিক করে ম্যাপে দেখুন</span>
+        </div>
+        
         <div id="spot-list" class="spot-grid">
-            <p style="text-align:center; grid-column: 1/-1; color:#6b7280;">ডেটা লোড হচ্ছে...</p>
+            <p style="text-align:center; grid-column: 1/-1; color:#6b7280; padding: 40px;">ডেটা লোড হচ্ছে... <i class="fas fa-spinner fa-spin"></i></p>
         </div>
     </div>
 
@@ -149,27 +209,32 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Map Initialize (Centered to Bauphal Upazila)
-        const map = L.map('map').setView([22.7303, 90.5392], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
+        // Map Initialize (Center: Bauphal)
+        const bauphalCenter = [22.7303, 90.5392];
+        const defaultZoom = 13;
+        
+        const map = L.map('map', {
+            center: bauphalCenter,
+            zoom: defaultZoom,
+            zoomControl: false // Customizing zoom control position
+        });
+        
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        // Premium Map Tile (CartoDB Positron for cleaner look)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap & Carto',
+            maxZoom: 19
         }).addTo(map);
 
+        // Make reset function global
+        window.resetMap = () => {
+            map.flyTo(bauphalCenter, defaultZoom, { duration: 1.5 });
+            map.closePopup();
+        };
+
         let allSpots = [];
-        let markers = [];
-
-        // Custom Icons
-        const greenIcon = new L.Icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-        });
-
-        const redIcon = new L.Icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-        });
+        let markersData = {}; // Store markers to access by ID
 
         const spotListDiv = document.getElementById('spot-list');
 
@@ -184,8 +249,10 @@
 
         function renderData(filterType) {
             spotListDiv.innerHTML = '';
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
+            
+            // Clear existing markers
+            Object.values(markersData).forEach(m => map.removeLayer(m));
+            markersData = {};
 
             const filteredSpots = allSpots.filter(spot => {
                 if (filterType === 'all') return true;
@@ -194,36 +261,79 @@
             });
 
             if (filteredSpots.length === 0) {
-                spotListDiv.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#6b7280;">কোনো তথ্য পাওয়া যায়নি।</p>';
+                spotListDiv.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color:#6b7280; padding: 40px;">আজকের জন্য কোনো তথ্য পাওয়া যায়নি।</p>';
                 return;
             }
 
             filteredSpots.forEach(spot => {
-                // Add Marker
-                const icon = spot.isGiving ? greenIcon : redIcon;
-                const marker = L.marker([spot.lat, spot.lng], { icon: icon }).addTo(map);
-                marker.bindPopup(`
-                    <strong>${spot.name}</strong><br>
-                    ${spot.item} ${spot.isGiving ? '✅ দেওয়া হবে' : '❌ দেওয়া হবে না'}
-                `);
-                markers.push(marker);
+                // Determine Icon Type (Mosque or Food)
+                // Note: Add a "type" field in your firebase database (e.g., type: 'mosque')
+                let iconHtml = spot.type === 'mosque' ? '🕌' : '🍛';
+                let markerClass = spot.isGiving ? 'giving' : 'not-giving';
 
-                // Add List Card
+                // Create Custom Marker HTML
+                const customIcon = L.divIcon({
+                    className: '',
+                    html: `<div class="custom-marker ${markerClass}" style="width: 35px; height: 35px;">${iconHtml}</div>`,
+                    iconSize: [35, 35],
+                    iconAnchor: [17, 35],
+                    popupAnchor: [0, -35]
+                });
+
+                const marker = L.marker([spot.lat, spot.lng], { icon: customIcon }).addTo(map);
+                
+                // Advanced Popup with Image (If image URL exists in database)
+                let imageTag = spot.image ? `<img src="${spot.image}" class="popup-img" alt="${spot.name}">` : '';
+                
+                marker.bindPopup(`
+                    <div style="min-width: 200px;">
+                        ${imageTag}
+                        <div class="popup-info">
+                            <h3>${iconHtml} ${spot.name}</h3>
+                            <p><strong>আইটেম:</strong> ${spot.item}</p>
+                            <p style="color: ${spot.isGiving ? '#065f46' : '#991b1b'}; font-weight: bold; margin-top: 5px;">
+                                ${spot.isGiving ? '✅ আজ দেওয়া হবে' : '❌ আজ বন্ধ'}
+                            </p>
+                        </div>
+                    </div>
+                `);
+                
+                // Store marker reference
+                markersData[spot.id] = marker;
+
+                // Create the UI Card
                 const card = document.createElement('div');
                 card.className = `spot-card ${spot.isGiving ? 'giving' : 'not-giving'}`;
-                
                 const badgeClass = spot.item === 'বিরিয়ানি' ? 'biryani' : 'other';
                 
                 card.innerHTML = `
                     <div class="spot-header">
-                        <div class="spot-title">${spot.name}</div>
+                        <div class="spot-title">${iconHtml} ${spot.name}</div>
                         <div class="badge ${badgeClass}">${spot.item}</div>
                     </div>
-                    <div style="font-size:13px; color:#6b7280;">📍 ${spot.address}</div>
+                    <div class="spot-address"><i class="fas fa-map-pin" style="color:#cbd5e1;"></i> ${spot.address}</div>
                     <div class="status ${spot.isGiving ? 'yes' : 'no'}">
                         ${spot.isGiving ? '✅ আজ এখানে বিতরণ করা হবে' : '❌ আজ এখানে বিতরণ বন্ধ'}
                     </div>
                 `;
+
+                // ✨ CLICK TO ZOOM FEATURE ✨
+                card.addEventListener('click', () => {
+                    // Fly to location smoothly
+                    map.flyTo([spot.lat, spot.lng], 17, {
+                        animate: true,
+                        duration: 1.5
+                    });
+                    
+                    // Open the popup after flying
+                    setTimeout(() => {
+                        marker.openPopup();
+                    }, 1500);
+
+                    // Scroll window to the map section smoothly (Great for mobile users)
+                    document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
+
                 spotListDiv.appendChild(card);
             });
         }
@@ -232,8 +342,10 @@
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                renderData(e.target.dataset.filter);
+                // Because button has inner HTML (icons), make sure we get the button element
+                const buttonElement = e.target.closest('.filter-btn');
+                buttonElement.classList.add('active');
+                renderData(buttonElement.dataset.filter);
             });
         });
     </script>
